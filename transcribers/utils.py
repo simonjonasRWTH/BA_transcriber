@@ -42,7 +42,7 @@ all_transcribers = [
     S7Transcriber,
     EtherCatTranscriber,
     MAVLinkTranscriber,
-    TCPTranscriber,
+    #TCPTranscriber,
 ]
 
 
