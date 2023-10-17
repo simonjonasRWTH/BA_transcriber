@@ -18,8 +18,13 @@ capture = pyshark.FileCapture(
 
 
 pkt = capture[4]
-print(pkt["TLS"].record_content_type.showname_value)
-print(pkt["TLS"].handshake_version.showname_value)
+pkt2 = capture[6]
+#print(pkt["TLS"].record_content_type.showname_value)
+#print(pkt["TLS"].handshake_version.showname_value)
+print(pkt["TLS"].field_names)
+print(pkt["TLS"].handshake_ciphersuite)
+#print(pkt2["TLS"].record_content_type)
+#print(pkt2["TLS"].handshake_type)
 """print(pkt.tcp.field_names)
 print(pkt.tcp.options_wscale.name)
 print(pkt.tcp.flags)

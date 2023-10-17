@@ -36,7 +36,7 @@ class TCPTranscriber(Transcriber):
             crc = int(pkt["TCP"].checksum_status),
             type = flags, # maybe in data?
             activity = Activity.UNKNOWN, # macht eigentlich gar keinen Sinn für TCP
-            flow = "{} - {} - {}".format(src, dest, flags)
+            flow = "{} - {} - {}".format(src, dest, flags) #machen die flags sinn? eher nicht I guess
         )
         # RST is never requested, handle graceful connection termination in match-function
         m._add_to_request_queue = False if {"RST"} == flags else True
@@ -46,7 +46,7 @@ class TCPTranscriber(Transcriber):
 
         # available TCP options
         available_options = pkt["TCP"].options.showname_value.split(",")
-        available_options = {s.strip() for s in available_options}
+        available_options = {s.strip() for s in available_options} # set of available options
     
         data = {
             "seqnr" : pkt["TCP"].seq,
@@ -71,5 +71,5 @@ class TCPTranscriber(Transcriber):
 
     def match_response(self, requests, response):
         # connection termination herausarbeiten
-        # ansonsten einfach chronologisch?
+        # ansonsten einfach chronologisch pro flow?
         return 
