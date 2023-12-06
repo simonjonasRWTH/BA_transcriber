@@ -3,7 +3,11 @@ import transcriber.settings as settings
 from transcriber.messages import Activity, IpalMessage
 from transcribers.transcriber import Transcriber
 
-
+# RFC 9293
+# @todo: simultanious tcp handshake
+# @todo: selective-repeat (RFC 1106)
+# @todo: SACK (RFC 2018)
+# @todo: what about graceful connection termination
 class TCPTranscriber(Transcriber):
     _name = "tcp"
 
@@ -22,7 +26,7 @@ class TCPTranscriber(Transcriber):
     def parse_packet(self, pkt):
         flags = pkt["TCP"].flags.showname_value
         flags = re.findall(r'\(.*?\)', flags)[0].strip("()").split(",")     # set flags in a string like: "SYN, ACK, FIN"
-        flags = {s.strip() for s in flags}                                  # Now a set of each Flag contained in packet
+        flags = (s.strip() for s in flags)                                  # Now a tuple of flags contained in packet
         
         src = "{}:{}".format(pkt["IP"].src, pkt["TCP"].srcport)
         dest = "{}:{}".format(pkt["IP"].dst, pkt["TCP"].dstport)
@@ -37,9 +41,9 @@ class TCPTranscriber(Transcriber):
             crc=int(pkt["TCP"].checksum_status),
             type=flags,                                     # maybe in data?
             activity=Activity.UNKNOWN,                      # macht eigentlich gar keinen Sinn für TCP
-            flow="{} - {} - {}".format(src, dest, flags)    # machen die flags sinn? eher nicht I guess
+            flow="{} - {}".format(src, dest)
         )
-        # RST is never requested, handle graceful connection termination in match-function
+        # RST is never requested
         m._add_to_request_queue = False if {"RST"} == flags else True
 
         # everything is a response to something despite connection start
@@ -71,6 +75,15 @@ class TCPTranscriber(Transcriber):
         return m
 
     def match_response(self, requests, response):
+        remove_from_queue = []
+
+        curr_ack = response.data["ack"]
+        
+        # remove every packet with a sequence nr < ack
+        for r in requests:
+            if r.data["seqnr"] < curr_ack:
+                remove_from_queue.append(r)
+                continue
         # connection termination herausarbeiten
         # ansonsten einfach chronologisch pro flow?
-        return
+        return remove_from_queue

@@ -84,6 +84,7 @@ class TLSTranscriber(Transcriber):
         dest = "{}:{}".format(pkt["IP"].dst, pkt["TCP"].dstport)
 
         data = {}
+        
         # Content type + description
         if pkt["TLS"].record_content_type == 21:    # alert - format of content_type: alert - {fatal, warning} - {description}
             content_type = "alert" + "-" + self._alert_level.get(pkt["TLS"].alert_level) + "-" + self._alert_description.get(pkt["TLS"].alert_description)
@@ -102,6 +103,8 @@ class TLSTranscriber(Transcriber):
                     data["session_id"] = None
                 else:
                     data["session_id"] = pkt["TLS"].handshake_session_id
+
+                # @TODO: Session Ticket?
                 # cipher suits
                 for cipher in pkt["TLS"].handshake_ciphersuite.all_fields:
                     ciphersuits.append(cipher.showname.split()[2])
@@ -134,24 +137,9 @@ class TLSTranscriber(Transcriber):
             activity=Activity.UNKNOWN,
             flow="{} - {}".format(src, dest)  # hier vielleicht noch type?
         )
+        
         # request / response stuff
         # + nur für handshake?
-
-
-        # data
-        # Handshake
-        # + Session ID
-        # 
-        # + cert?!
-        # + finish -> verify data?
-        # + TLS Session Ticket  - lifetime hint
-        #                       - ticket selber
-        # Application data
-        # + data length? -> sagt eigentlich nichts aus
-        # alert
-        # + maybe something interesting?
-
-        # TODO: Session resumption angucken
 
         return m
 
