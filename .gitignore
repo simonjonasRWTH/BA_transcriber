@@ -5,7 +5,6 @@ tests/snapshots/output
 tests/snapshots/tmp
 
 # Editors
-.vscode/
 .idea/
 
 # Vagrant

@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+    {
+    
+    "name": "IPAL-Transcriber",
+    "type": "python",
+    "request": "launch",
+    "program": "${file}",
+    "console": "integratedTerminal",
+    "env": {
+    "PYTHONPATH": "${workspaceRoot}"
+    },
+    "args": [
+    "--pcap", "/mnt/d/10. local repositories/UROP/tls-ipal-extension/samples/ModbusTCP/ModbusTCP-noTLS.pcap",
+    "--protocols", "modbus",
+    "--ipal.output", "./tmp/output.txt",
+    "--log", "DEBUG",
+    "--logfile", "./tmp/log.txt",
+    ]
+    }
+    ]
+    }
