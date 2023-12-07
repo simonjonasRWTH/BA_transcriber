@@ -30,6 +30,8 @@ class TCPTranscriber(Transcriber):
         
         src = "{}:{}".format(pkt["IP"].src, pkt["TCP"].srcport)
         dest = "{}:{}".format(pkt["IP"].dst, pkt["TCP"].dstport)
+        
+        # @todo broken since response matching is not suitable for bidirectional connections
         flow = (src, dest)
 
         m = IpalMessage(
@@ -58,21 +60,24 @@ class TCPTranscriber(Transcriber):
             "seqnr" : pkt["TCP"].seq,
             "ack" : pkt["TCP"].ack,
             "windowsize" : pkt["TCP"].window_size,
+            "options" : None,
         }
 
         # parse tcp options
+        options = []
         for option in available_options:
             access_name = self._option_showname_to_keyname.get(option)
-            if access_name == None:  # option supported?
+            if access_name is None:  # option supported?
                 continue
             elif access_name == "options_sack_perm":
-                data["SACK permitted"] = True
+                options.append("SACK permitted:true")
             elif access_name == "option_sack":  # special handling for sack
-                data["SACK_left_edge"] = pkt["TCP"].options_sack_le
-                data["SACK_right_edge"] = pkt["TCP"].options_sack_re
+                options.append("SACK_left_edge:{}".format(pkt["TCP"].options_sack_le))
+                options.append("SACK_right_edge:{}".format(pkt["TCP"].options_sack_re))
             else:
-                data[option] = getattr(pkt["TCP"], access_name)  # rest is appended
-
+                # rest is appended
+                options.append("{}:{}".format(option, getattr(pkt["TCP"], access_name)))  
+        data["options"] = options
         # finished
         m.data = data
         return [m]
