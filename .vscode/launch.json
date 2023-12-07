@@ -12,8 +12,7 @@
     "PYTHONPATH": "${workspaceRoot}"
     },
     "args": [
-    "--pcap", "/mnt/d/10. local repositories/UROP/tls-ipal-extension/samples/ModbusTCP/ModbusTCP-noTLS.pcap",
-    "--protocols", "modbus",
+    "--pcap", "/home/kali/BA_transcriber/tmp/ModbusTCP-noTLS.pcap",
     "--ipal.output", "./tmp/output.txt",
     "--log", "DEBUG",
     "--logfile", "./tmp/log.txt",

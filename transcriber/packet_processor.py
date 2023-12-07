@@ -38,15 +38,20 @@ class PacketProcessor:
         # 1st pipeline step: Transform packets request/response packets into an abstract form
 
         # check if the current packet can be handled by any of the selected transcribers and ignore it otherwise
+        applicable_transcribers = []
         for protocol in settings.protocols:
             if self.transcribers[protocol].matches_protocol(pkt):
-                break
-        else:
+                applicable_transcribers.append(protocol)
+
+        if len(applicable_transcribers) == 0:
             settings.logger.debug("No parser for packet: {}".format(pkt))
             return
 
         # now we can parse the packet
-        ipal_messages = self.transcribers[protocol].parse_packet(pkt)
+        ipal_messages = []
+        for protocol in applicable_transcribers:
+            ipal_messages += self.transcribers[protocol].parse_packet(pkt)
+
         if len(ipal_messages) == 0:
             settings.logger.debug(
                 "Transcriber of protocol {} did not return any IPAL messages for packet {}".format(

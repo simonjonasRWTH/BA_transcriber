@@ -26,7 +26,7 @@ class TCPTranscriber(Transcriber):
     def parse_packet(self, pkt):
         flags = pkt["TCP"].flags.showname_value
         flags = re.findall(r'\(.*?\)', flags)[0].strip("()").split(",")     # set flags in a string like: "SYN, ACK, FIN"
-        flags = (s.strip() for s in flags)                                  # Now a tuple of flags contained in packet
+        flags = [s.strip() for s in flags]                                  # Now a list of flags contained in packet
         
         src = "{}:{}".format(pkt["IP"].src, pkt["TCP"].srcport)
         dest = "{}:{}".format(pkt["IP"].dst, pkt["TCP"].dstport)
@@ -68,11 +68,11 @@ class TCPTranscriber(Transcriber):
                 data["SACK_left_edge"] = pkt["TCP"].options_sack_le
                 data["SACK_right_edge"] = pkt["TCP"].options_sack_re
             else:
-                data[option] = pkt["TCP"].access_name  # rest is appended
+                data[option] = getattr(pkt["TCP"],access_name)  # rest is appended
 
         # finished
         m.data = data
-        return m
+        return [m]
 
     def match_response(self, requests, response):
         remove_from_queue = []
