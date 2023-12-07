@@ -54,9 +54,17 @@ pkt = capture[0]
 available_options = pkt["TCP"].options.showname_value.split(",")
 available_options = {s.strip() for s in available_options} # set of available options
 
+
+print(pkt["TCP"].options_sack_perm)
+
+"""
 for option in available_options:
     access_name = _option_showname_to_keyname.get(option)
+    if access_name == None:
+        continue
     print(option)
     print(access_name)
+    print(getattr(pkt["TCP"], access_name))
+    print()
     print("--")
-    #print(getattr(pkt["TCP"], access_name))
+"""

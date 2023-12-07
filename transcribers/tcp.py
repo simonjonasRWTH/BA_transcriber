@@ -3,7 +3,7 @@ import transcriber.settings as settings
 from transcriber.messages import Activity, IpalMessage
 from transcribers.transcriber import Transcriber
 
-# RFC 9293
+# RFC 9293 & RFC 7323 & RFC 2018
 # @todo: simultanious tcp handshake
 # @todo: selective-repeat (RFC 1106)
 # @todo: SACK (RFC 2018)
@@ -17,7 +17,7 @@ class TCPTranscriber(Transcriber):
         "Window scale" : "options_wscale_multiplier",   # Scale factor for window size
         "SACK permitted" : "options_sack_perm",         # SACK supported?
         "SACK" : "options_sack",                        # SACK
-        "Timestamps" : "options_timestamp",             # timestamps
+        "Timestamps" : "options_timestamp_tsval",       # timestamps
     }
 
     def matches_protocol(self, pkt):
@@ -30,7 +30,8 @@ class TCPTranscriber(Transcriber):
         
         src = "{}:{}".format(pkt["IP"].src, pkt["TCP"].srcport)
         dest = "{}:{}".format(pkt["IP"].dst, pkt["TCP"].dstport)
-               
+        flow = (src, dest)
+
         m = IpalMessage(
             id=self._id_counter.get_next_id(),
             timestamp=float(pkt.sniff_time.timestamp()),
@@ -41,13 +42,13 @@ class TCPTranscriber(Transcriber):
             crc=int(pkt["TCP"].checksum_status),
             type=flags,                                     # maybe in data?
             activity=Activity.UNKNOWN,                      # macht eigentlich gar keinen Sinn für TCP
-            flow="{} - {}".format(src, dest)
+            flow=flow
         )
         # RST is never requested
-        m._add_to_request_queue = False if {"RST"} == flags else True
+        m._add_to_request_queue = False if ["RST"] == flags else True
 
         # everything is a response to something despite connection start
-        m._match_to_requests = False if {"SYN"} == flags else True
+        m._match_to_requests = False if ["SYN"] == flags else True
 
         # available TCP options
         available_options = pkt["TCP"].options.showname_value.split(",")
@@ -64,11 +65,13 @@ class TCPTranscriber(Transcriber):
             access_name = self._option_showname_to_keyname.get(option)
             if access_name == None:  # option supported?
                 continue
+            elif access_name == "options_sack_perm":
+                data["SACK permitted"] = True
             elif access_name == "option_sack":  # special handling for sack
                 data["SACK_left_edge"] = pkt["TCP"].options_sack_le
                 data["SACK_right_edge"] = pkt["TCP"].options_sack_re
             else:
-                data[option] = getattr(pkt["TCP"],access_name)  # rest is appended
+                data[option] = getattr(pkt["TCP"], access_name)  # rest is appended
 
         # finished
         m.data = data
