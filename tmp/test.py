@@ -42,20 +42,20 @@ _option_showname_to_keyname = {
     "Timestamps" : "options_timestamp",             # timestamps
 }
 
-path = "/home/kali/BA_transcriber/tmp/ModbusTCP-noTLS.pcap"
-decodes = {
-    "tcp.port==5000" : "mbtcp", 
-    "tcp.port==46479" : "mbtcp"}
-capture = pyshark.FileCapture(
-    path, 
-    decode_as = decodes
-)
+#path = "/home/kali/BA_transcriber/tmp/ModbusTCP-noTLS.pcap"
+path = "/media/sj/2nd SSD/12. local datasets/ipal-datasets/WDT/raw/Network datatset/pcap/normal_split.pcap"
+#decodes = {
+#    "tcp.port==5000" : "mbtcp", 
+#    "tcp.port==46479" : "mbtcp"}
+capture = pyshark.FileCapture(path)
 pkt = capture[0]
-available_options = pkt["TCP"].options.showname_value.split(",")
-available_options = {s.strip() for s in available_options} # set of available options
+print(pkt["TCP"].field_names)
+print("options" in pkt["TCP"].field_names)
+#available_options = pkt["TCP"].options.showname_value.split(",")
+#available_options = {s.strip() for s in available_options} # set of available options
 
 
-print(pkt["TCP"].options_sack_perm)
+#print(pkt["TCP"].options_sack_perm)
 
 """
 for option in available_options:

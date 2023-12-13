@@ -53,9 +53,11 @@ class TCPTranscriber(Transcriber):
         m._match_to_requests = False if ["SYN"] == flags else True
 
         # available TCP options
-        available_options = pkt["TCP"].options.showname_value.split(",")
-        available_options = {s.strip() for s in available_options} # set of available options
-
+        if "options" in pkt["TCP"].field_names:
+            available_options = pkt["TCP"].options.showname_value.split(",")
+            available_options = {s.strip() for s in available_options} # set of available options
+        else:
+            available_options = []
         data = {
             "seqnr" : pkt["TCP"].seq,
             "ack" : pkt["TCP"].ack,
