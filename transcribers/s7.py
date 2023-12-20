@@ -41,7 +41,7 @@ class S7Transcriber(Transcriber):
         dest = "{}:{}".format(ip.dst, tcp.dstport)
         length = int(s7_pkt.header_parlg) + int(s7_pkt.header_datlg)
 
-        tcp_msg = self._tcp_transcriber.parse_packet(pkt)[0]
+        tcp_msg = self._tcp_transcriber.parse_layer(pkt)[0]
 
         try:
             job = int(s7_pkt.header_rosctr)
