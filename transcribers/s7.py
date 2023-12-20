@@ -41,7 +41,7 @@ class S7Transcriber(Transcriber):
         dest = "{}:{}".format(ip.dst, tcp.dstport)
         length = int(s7_pkt.header_parlg) + int(s7_pkt.header_datlg)
 
-        tcp_msg = self._tcp_transcriber.parse_layer(pkt)[0]
+        tcp_data = self._tcp_transcriber.parse_layer(pkt)
 
         try:
             job = int(s7_pkt.header_rosctr)
@@ -197,7 +197,7 @@ class S7Transcriber(Transcriber):
                 f"S7 job {job} has not been implemented for the transcriber, ignoring packet ..."
             )
             return []
-        m.data |= tcp_msg["data"]
+        m.data |= tcp_data
         return [m]
 
     def match_response(self, requests, response):
