@@ -2,7 +2,7 @@
 dir=/home/sj/BA_stuff/datasets/Lemay/
 transcriber=/home/sj/BA_stuff/BA_transcriber/ipal-transcriber
 out_dir=/home/sj/BA_stuff/transcribed_pcaps/Lemay
-: '
+
 #normal
 for filename in $dir/raw/normal/*.pcap
 do
@@ -55,7 +55,7 @@ python3 ${transcriber} \
         --ipal.output $dir/raw/attack/send_a_fake_command_modbus_6RTU_with_operate.out \
         --protocols modbus tcp \
         --malicious $dir/attacks-send_a_fake_command_modbus_6RTU_with_operate.json
-'
+
 #channel
 for filename in $dir/raw/channel/*.pcap
 do
