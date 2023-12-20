@@ -43,28 +43,40 @@ _option_showname_to_keyname = {
 }
 
 #path = "/home/kali/BA_transcriber/tmp/ModbusTCP-noTLS.pcap"
-path = "/media/sj/2nd SSD/12. local datasets/ipal-datasets/WDT/raw/Network datatset/pcap/normal_split.pcap"
+#path = "/media/sj/2nd SSD/12. local datasets/ipal-datasets/WDT/raw/Network datatset/pcap/normal_split.pcap"
+path = "/media/sj/2nd SSD/10. local repositories/BA_transcriber/tmp/ModbusTCP-noTLS.pcap"
 #decodes = {
 #    "tcp.port==5000" : "mbtcp", 
 #    "tcp.port==46479" : "mbtcp"}
 capture = pyshark.FileCapture(path)
 pkt = capture[0]
-print(pkt["TCP"].field_names)
+#print(pkt["TCP"].field_names)
 print("options" in pkt["TCP"].field_names)
-#available_options = pkt["TCP"].options.showname_value.split(",")
-#available_options = {s.strip() for s in available_options} # set of available options
+if "options" in pkt["TCP"].field_names: 
+    available_options = pkt["TCP"].options.showname_value.split(",")
+    available_options = {s.strip() for s in available_options} # set of available options
+else:
+    available_options = []
+data = {
+    "seqnr" : pkt["TCP"].seq,
+    "ack" : pkt["TCP"].ack,
+    "windowsize" : pkt["TCP"].window_size,
+    "options" : None,
+}
 
-
-#print(pkt["TCP"].options_sack_perm)
-
-"""
+print(available_options)
+options = []
 for option in available_options:
     access_name = _option_showname_to_keyname.get(option)
-    if access_name == None:
+    if access_name is None:  # option supported?
         continue
-    print(option)
-    print(access_name)
-    print(getattr(pkt["TCP"], access_name))
-    print()
-    print("--")
-"""
+    elif access_name == "options_sack_perm":
+        options.append("SACK permitted:true")
+    elif access_name == "option_sack":  # special handling for sack
+        options.append("SACK_left_edge:{}".format(pkt["TCP"].options_sack_le))
+        options.append("SACK_right_edge:{}".format(pkt["TCP"].options_sack_re))
+    else:
+    # rest is appended
+        options.append("{}:{}".format(option, getattr(pkt["TCP"], access_name)))
+
+print(options)

@@ -6,13 +6,14 @@
     "name": "IPAL-Transcriber",
     "type": "python",
     "request": "launch",
-    "program": "${file}",
+    "program": "ipal-transcriber",
     "console": "integratedTerminal",
     "env": {
     "PYTHONPATH": "${workspaceRoot}"
     },
     "args": [
     "--pcap", "/home/kali/BA_transcriber/tmp/ModbusTCP-noTLS.pcap",
+    //"--pcap" , "/media/sj/2nd SSD/12. local datasets/ipal-datasets/WDT/raw/Network datatset/pcap/normal_split.pcap",
     "--ipal.output", "./tmp/output.txt",
     "--log", "DEBUG",
     "--logfile", "./tmp/log.txt",
