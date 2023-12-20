@@ -6,7 +6,7 @@
     "name": "IPAL-Transcriber",
     "type": "python",
     "request": "launch",
-    "program": "ipal-transcriber",
+    "program": "./ipal-transcriber",
     "console": "integratedTerminal",
     "env": {
     "PYTHONPATH": "${workspaceRoot}"
@@ -14,10 +14,31 @@
     "args": [
     "--pcap", "/home/kali/BA_transcriber/tmp/ModbusTCP-noTLS.pcap",
     //"--pcap" , "/media/sj/2nd SSD/12. local datasets/ipal-datasets/WDT/raw/Network datatset/pcap/normal_split.pcap",
+    // "--protocols", "modbus",
     "--ipal.output", "./tmp/output.txt",
     "--log", "DEBUG",
     "--logfile", "./tmp/log.txt",
     ]
+    },
+
+    {
+        "name": "WDT-debug",
+        "type": "python",
+        "request": "launch",
+        "program": "./ipal-transcriber",
+        "console": "integratedTerminal",
+        "env": {
+            "PYTHONPATH": "${workspaceRoot}"
+        },
+        "args": [
+            "--pcap", "/home/kali/WDT/attack_1.pcap",
+            "--ipal.output", "/home/kali/WDT/output/attack_1.out",
+            "--malicious.default", "false",
+            "--malicious", "/home/kali/WDT/attacks.json",
+            "--log", "info",
+            "--rules", "/home/kali/WDT/utils/rules.py",
+            "--protocol", "tcp","modbus",
+        ]
     }
     ]
     }
