@@ -50,8 +50,12 @@ path = "/media/sj/2nd SSD/10. local repositories/BA_transcriber/tmp/ModbusTCP-no
 #    "tcp.port==46479" : "mbtcp"}
 capture = pyshark.FileCapture(path)
 pkt = capture[0]
-#print(pkt["TCP"].field_names)
+print(pkt["TCP"].field_names)
 print("options" in pkt["TCP"].field_names)
+print(pkt["TCP"].seq_raw)
+print(pkt["TCP"].ack_raw)
+
+"""
 if "options" in pkt["TCP"].field_names: 
     available_options = pkt["TCP"].options.showname_value.split(",")
     available_options = {s.strip() for s in available_options} # set of available options
@@ -80,3 +84,4 @@ for option in available_options:
         options.append("{}:{}".format(option, getattr(pkt["TCP"], access_name)))
 
 print(options)
+"""

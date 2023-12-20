@@ -12,9 +12,10 @@
     "PYTHONPATH": "${workspaceRoot}"
     },
     "args": [
-    "--pcap", "/home/kali/BA_transcriber/tmp/ModbusTCP-noTLS.pcap",
+    // "--pcap", "/home/kali/BA_transcriber/tmp/ModbusTCP-noTLS.pcap",
     //"--pcap" , "/media/sj/2nd SSD/12. local datasets/ipal-datasets/WDT/raw/Network datatset/pcap/normal_split.pcap",
-    // "--protocols", "modbus",
+    "--pcap" , "./tmp/ModbusTCP-noTLS.pcap",
+    "--protocols", "modbus", "tcp",
     "--ipal.output", "./tmp/output.txt",
     "--log", "DEBUG",
     "--logfile", "./tmp/log.txt",

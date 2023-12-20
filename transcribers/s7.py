@@ -1,6 +1,7 @@
 import transcriber.settings as settings
 from transcriber.messages import Activity, IpalMessage
 from transcribers.transcriber import Transcriber
+from transcribers.tcp import TCPTranscriber
 
 
 class S7Transcriber(Transcriber):
@@ -26,6 +27,8 @@ class S7Transcriber(Transcriber):
         0x87: "V",  # unknown
     }
 
+    _tcp_transcriber = TCPTranscriber(1)
+
     def matches_protocol(self, pkt):
         return "S7COMM" in pkt
 
@@ -37,6 +40,8 @@ class S7Transcriber(Transcriber):
         src = "{}:{}".format(ip.src, tcp.srcport)
         dest = "{}:{}".format(ip.dst, tcp.dstport)
         length = int(s7_pkt.header_parlg) + int(s7_pkt.header_datlg)
+
+        tcp_msg = self._tcp_transcriber.parse_packet(pkt)[0]
 
         try:
             job = int(s7_pkt.header_rosctr)
@@ -192,7 +197,7 @@ class S7Transcriber(Transcriber):
                 f"S7 job {job} has not been implemented for the transcriber, ignoring packet ..."
             )
             return []
-
+        m.data |= tcp_msg["data"]
         return [m]
 
     def match_response(self, requests, response):

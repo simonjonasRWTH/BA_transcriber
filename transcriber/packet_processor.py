@@ -47,6 +47,10 @@ class PacketProcessor:
             settings.logger.debug("No parser for packet: {}".format(pkt))
             return
 
+        # filter out tcp if a tcp based app layer is included
+        if len(applicable_transcribers) > 1 and "tcp" in applicable_transcribers:
+            applicable_transcribers.remove("tcp")
+
         # now we can parse the packet
         ipal_messages = []
         for protocol in applicable_transcribers:

@@ -1,6 +1,7 @@
 import transcriber.settings as settings
 from transcriber.messages import Activity, IpalMessage
 from transcribers.transcriber import Transcriber
+from transcribers.tcp import TCPTranscriber
 
 
 class ModbusTranscriber(Transcriber):
@@ -17,6 +18,7 @@ class ModbusTranscriber(Transcriber):
         16: "holding.register"
         # only possible to request multiple holding registers at once, which is handled in another function
     }
+    _tcp_transcriber = TCPTranscriber(1)
 
     @classmethod
     def state_identifier(cls, msg, key):
@@ -42,6 +44,8 @@ class ModbusTranscriber(Transcriber):
         src = "{}:{}".format(pkt["IP"].src, pkt["TCP"].srcport)
         dest = "{}:{}".format(pkt["IP"].dst, pkt["TCP"].dstport)
 
+        tcp_data = self._tcp_transcriber.parse_layer(pkt)
+
         for i in range(len(adu_layers)):
             adu = adu_layers[i]
             mb = mb_layers[i]
@@ -62,6 +66,7 @@ class ModbusTranscriber(Transcriber):
                     flow=flow,
                     length=length,
                     type=code,
+                    data=tcp_data,
                 )
 
                 if "exception_code" in mb.field_names:
@@ -91,6 +96,7 @@ class ModbusTranscriber(Transcriber):
                     flow=flow,
                     length=length,
                     type=code,
+                    data=tcp_data
                 )
 
                 if code in [1, 2, 3, 4]:
@@ -168,7 +174,7 @@ class ModbusTranscriber(Transcriber):
                     mb.func_code
                 )
             )
-        m.data = data
+        m.data |= data
 
     def transcribe_write_response(self, m, mb):
         m._match_to_requests = True
@@ -206,7 +212,7 @@ class ModbusTranscriber(Transcriber):
                 )
             )  # mb.pdfdump()
 
-        m.data = data
+        m.data |= data
 
     def transcribe_read_request(self, m, mb):
         m.activity = Activity.INTERROGATE
@@ -234,15 +240,13 @@ class ModbusTranscriber(Transcriber):
                     code
                 )
             )
-        m.data = data
+        m.data |= data
 
     def transcribe_read_response(self, m, mb):
         m.activity = Activity.INFORM
         m._match_to_requests = True
 
         code = int(mb.func_code)
-
-        m.data = {}
 
         if code == 4 or code == 3:
             for i in range(int(mb.byte_cnt) // 2):

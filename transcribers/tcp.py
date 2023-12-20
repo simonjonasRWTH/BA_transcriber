@@ -8,6 +8,8 @@ from transcribers.transcriber import Transcriber
 # @todo: selective-repeat (RFC 1106)
 # @todo: SACK (RFC 2018)
 # @todo: what about graceful connection termination
+
+
 class TCPTranscriber(Transcriber):
     _name = "tcp"
 
@@ -23,16 +25,52 @@ class TCPTranscriber(Transcriber):
     def matches_protocol(self, pkt):
         return "TCP" in pkt
 
-    def parse_packet(self, pkt):
+    def _parse_tcp_options(self, pkt):
+        # available TCP options
+        if "options" in pkt["TCP"].field_names:
+            available_options = pkt["TCP"].options.showname_value.split(",")
+            available_options = {s.strip() for s in available_options}  # set of available options
+        else:
+            available_options = []
+        
+        # parse tcp options
+        options = {}
+        for option in available_options:
+            access_name = self._option_showname_to_keyname.get(option)
+            if access_name is None:  # option supported?
+                continue
+            elif access_name == "options_sack_perm":
+                options["tcp_sack_permitted"] = True
+            else:
+                # rest is appended
+                options["tcp_{}".format(option)] = getattr(pkt["TCP"], access_name)
+
+        return options
+            
+    def _parse_tcp_data(self, pkt):
         flags = pkt["TCP"].flags.showname_value
         flags = re.findall(r'\(.*?\)', flags)[0].strip("()").split(",")     # set flags in a string like: "SYN, ACK, FIN"
-        flags = [s.strip() for s in flags]                                  # Now a list of flags contained in packet
+        flags = [s.strip() for s in flags] 
         
+        data = {
+            "tcp_seqnr" : pkt["TCP"].seq_raw,
+            "tcp_ack" : pkt["TCP"].ack_raw,
+            "tcp_windowsize" : pkt["TCP"].window_size,
+            "tcp_flags" : flags,
+        }
+
+        return data
+    
+    def parse_packet(self, pkt):        
         src = "{}:{}".format(pkt["IP"].src, pkt["TCP"].srcport)
         dest = "{}:{}".format(pkt["IP"].dst, pkt["TCP"].dstport)
         
         # @todo broken since response matching is not suitable for bidirectional connections
         flow = (src, dest)
+
+        data = {}
+        data |= self._parse_tcp_data(pkt)
+        data |= self._parse_tcp_options(pkt)
 
         m = IpalMessage(
             id=self._id_counter.get_next_id(),
@@ -42,56 +80,36 @@ class TCPTranscriber(Transcriber):
             dest=dest,
             length=pkt["TCP"].len,
             crc=int(pkt["TCP"].checksum_status),
-            type=flags,                                     # maybe in data?
+            type="transport",
             activity=Activity.UNKNOWN,                      # macht eigentlich gar keinen Sinn für TCP
-            flow=flow
+            flow=flow,
+            data=data,
         )
+
         # RST is never requested
-        m._add_to_request_queue = False if ["RST"] == flags else True
+        m._add_to_request_queue = False if ["RST"] == m.data["tcp_flags"] else True
 
         # everything is a response to something despite connection start
-        m._match_to_requests = False if ["SYN"] == flags else True
+        m._match_to_requests = False if ["SYN"] == m.data["tcp_flags"] else True
 
-        # available TCP options
-        if "options" in pkt["TCP"].field_names:
-            available_options = pkt["TCP"].options.showname_value.split(",")
-            available_options = {s.strip() for s in available_options} # set of available options
-        else:
-            available_options = []
-        data = {
-            "seqnr" : pkt["TCP"].seq,
-            "ack" : pkt["TCP"].ack,
-            "windowsize" : pkt["TCP"].window_size,
-            "options" : None,
-        }
-
-        # parse tcp options
-        options = []
-        for option in available_options:
-            access_name = self._option_showname_to_keyname.get(option)
-            if access_name is None:  # option supported?
-                continue
-            elif access_name == "options_sack_perm":
-                options.append("SACK permitted:true")
-            elif access_name == "option_sack":  # special handling for sack
-                options.append("SACK_left_edge:{}".format(pkt["TCP"].options_sack_le))
-                options.append("SACK_right_edge:{}".format(pkt["TCP"].options_sack_re))
-            else:
-                # rest is appended
-                options.append("{}:{}".format(option, getattr(pkt["TCP"], access_name)))  
-        data["options"] = options
-        # finished
-        m.data = data
         return [m]
+
+    def parse_layer(self, pkt):
+
+        data = {}
+        data |= self._parse_tcp_data(pkt)
+        data |= self._parse_tcp_options(pkt)
+
+        return data
 
     def match_response(self, requests, response):
         remove_from_queue = []
 
-        curr_ack = response.data["ack"]
+        curr_ack = response.data["tcp_ack"]
         
         # remove every packet with a sequence nr < ack
         for r in requests:
-            if r.data["seqnr"] < curr_ack:
+            if r.data["tcp_seqnr"] < curr_ack:
                 remove_from_queue.append(r)
                 continue
         # connection termination herausarbeiten
