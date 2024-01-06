@@ -6,7 +6,7 @@ version = "v1.3.6"
 compresslevel = 9  # 0 no compress, 1 large/fast, 9 small/slow
 
 # Assumed default ports
-MBTCP_PORT = 5000
+MBTCP_PORT = 502
 ENIP_PORT = 44818
 MAVLINK_PORT = [14550, 14580]
 

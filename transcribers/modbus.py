@@ -390,8 +390,8 @@ class ModbusTranscriber(Transcriber):
 
             for request in requests:
                 if request.data.keys() == response.data.keys():
-                    for key in request.data.keys():
-                        response.data[key] = None  # request.data[key]
+                    #for key in request.data.keys():
+                    #    response.data[key] = None  # request.data[key]
 
                     response.responds_to.append(request.id)
                     remove_from_queue.append(request)
